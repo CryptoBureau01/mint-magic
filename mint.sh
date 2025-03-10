@@ -71,6 +71,10 @@ install_dependency() {
     pip3 install eth_account
 
     sleep 1
+
+    pip3 install selenium webdriver-manager
+
+    sleep 1
     wget -q https://chromedriver.storage.googleapis.com/$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE)/chromedriver_linux64.zip
     unzip chromedriver_linux64.zip && sudo mv chromedriver /usr/local/bin/
     
