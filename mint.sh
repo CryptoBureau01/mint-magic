@@ -66,7 +66,11 @@ install_dependency() {
     echo "Installing required dependencies..."
     sudo apt update && sudo apt install -y curl jq chromium-browser unzip python3-pip
     pip3 install --upgrade pip selenium
-    
+
+    sleep 1
+    pip3 install eth_account
+
+    sleep 1
     wget -q https://chromedriver.storage.googleapis.com/$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE)/chromedriver_linux64.zip
     unzip chromedriver_linux64.zip && sudo mv chromedriver /usr/local/bin/
     
