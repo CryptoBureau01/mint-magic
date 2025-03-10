@@ -207,7 +207,7 @@ EOF
 # Function to display menu and prompt user for input
 master() {
     print_info "==============================="
-    print_info "    ABC Node Tool Menu      "
+    print_info "    Magic-Mint Tool Menu       "
     print_info "==============================="
     print_info ""
     print_info "1. Install-Dependency"
@@ -216,17 +216,14 @@ master() {
     print_info "4. Set-Mint-Url"
     print_info "5. Check-Mint-Time"
     print_info "6. Auto-Mint"
-    print_info "7. "
-    print_info "8. "
-    print_info "9. "
-    
+    print_info "7. Exit"
     print_info ""
     print_info "==============================="
     print_info " Created By : CB-Master "
     print_info "==============================="
     print_info ""
     
-    read -p "Enter your choice (1 or 3): " user_choice
+    read -p "Enter your choice (1 or 7): " user_choice
 
     case $user_choice in
         1)
@@ -248,13 +245,10 @@ master() {
             automatic_mint
             ;;
         7)
-
-            ;;
-        8)
             exit 0  # Exit the script after breaking the loop
             ;;
         *)
-            print_error "Invalid choice. Please enter 1 or 3 : "
+            print_error "Invalid choice. Please enter 1 or 7 : "
             ;;
     esac
 }
