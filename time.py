@@ -8,8 +8,6 @@ import time
 MINT_URL_FILE = "magic/data_url"
 
 def get_mint_time():
-    driver = None  # Initialize driver variable
-
     try:
         # Load the URL from the file
         with open(MINT_URL_FILE, "r") as file:
@@ -31,18 +29,23 @@ def get_mint_time():
         driver.get(MINT_URL)
         time.sleep(5)  # Wait for JavaScript to load
 
-        # Find the countdown timer (check the exact class name in the webpage)
+        # **Find the timer numbers using XPath**
         try:
-            countdown = driver.find_element(By.CLASS_NAME, "countdown-timer").text
-            print(f"✅ Mint starts in: {countdown}")
-        except:
-            print("❌ Could not retrieve mint time. Please check the URL or class name.")
+            timer_elements = driver.find_elements(By.XPATH, "//div[contains(@class, 'tw-size-8')]/span")
+
+            if len(timer_elements) == 4:
+                mint_time = f"{timer_elements[0].text}:{timer_elements[1].text}:{timer_elements[2].text}:{timer_elements[3].text}"
+                print(f"✅ Mint starts in: {mint_time}")
+            else:
+                print("❌ Could not retrieve mint time. Timer format issue.")
+
+        except Exception as e:
+            print(f"❌ Error finding timer: {e}")
 
     except Exception as e:
         print(f"❌ Error: {e}")
 
     finally:
-        if driver:  # Only quit if driver was initialized successfully
-            driver.quit()
+        driver.quit()
 
 get_mint_time()
