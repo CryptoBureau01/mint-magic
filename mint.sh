@@ -147,22 +147,30 @@ set_mint_url() {
 
 # Function: Check Mint Time
 check_mint_time() {
-    if [ ! -f magic/data_url ]; then
-        echo "Mint URL not found! Please set the mint URL first."
-        return
+    # Ensure magic folder exists
+    mkdir -p magic
+
+    # Check if time.py exists, if not download it
+    if [ ! -f magic/time.py ]; then
+        echo "🔄 Downloading time.py from GitHub..."
+        curl -s -o magic/time.py https://raw.githubusercontent.com/CryptoBureau01/mint-magic/main/time.py
+        if [ $? -ne 0 ]; then
+            echo "❌ Failed to download time.py! Check your internet connection or GitHub link."
+            return
+        fi
+        chmod +x magic/time.py  # Make it executable
     fi
-    
-    MINT_URL=$(cat magic/data_url)
-    echo "Fetching mint time from: $MINT_URL"
-    
-    MINT_TIME=$(curl -s "$MINT_URL" | grep -oP '(?<=Mint Starts: )[0-9]{2}:[0-9]{2}:[0-9]{2}')
-    
+
+    # Run the Python script and fetch the mint time
+    echo "🔄 Running Python script to fetch mint time..."
+    MINT_TIME=$(python3 magic/time.py | grep -oP '(?<=✅ Mint starts in: ).*')
+
     if [ -z "$MINT_TIME" ]; then
-        echo "Could not retrieve mint time. Please check the URL."
+        echo "❌ Could not retrieve mint time. Please check the URL in magic/data."
     else
-        echo "Mint starts at: $MINT_TIME"
+        echo "✅ Mint starts at: $MINT_TIME"
     fi
-    
+
     # Call the uni_menu function to display the menu
     master
 }
