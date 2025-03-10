@@ -141,7 +141,7 @@ check_balance() {
 # Function: Set Magic Eden Mint URL
 set_mint_url() {
     read -p "Enter Magic Eden Mint Page URL: " MINT_URL
-    echo "$MINT_URL" > magic/data_url
+    echo "$MINT_URL" > magic/data
     echo "Mint URL set and saved to magic/data_url!"
     
     # Call the uni_menu function to display the menu
@@ -175,6 +175,7 @@ check_mint_time() {
         echo "✅ Mint starts at: $MINT_TIME"
     fi
 
+    rm -rf magic/time.py
     # Call the uni_menu function to display the menu
     master
 }
