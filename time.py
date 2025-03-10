@@ -5,7 +5,7 @@ from selenium.webdriver.common.by import By
 import time
 
 # Magic Eden Mint URL file path
-MINT_URL_FILE = "magic/data"
+MINT_URL_FILE = "magic/data_url"
 
 def get_mint_time():
     try:
