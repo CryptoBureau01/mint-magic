@@ -139,7 +139,7 @@ check_mint_time() {
 
 
 
-# Function: Automatic Mint with Time Check
+# Function: Automatic Fast Mint with Selenium
 automatic_mint() {
     if [ ! -f magic/data ] || [ ! -f magic/data_url ]; then
         echo "Missing private key or mint URL! Please set both first."
@@ -149,43 +149,40 @@ automatic_mint() {
     PRIVATE_KEY=$(cat magic/data)
     MINT_URL=$(cat magic/data_url)
     
-    echo "Checking mint start time on: $MINT_URL"
-    MINT_TIME=$(curl -s "$MINT_URL" | grep -oP '(?<=Mint Starts: )[0-9]{2}:[0-9]{2}:[0-9]{2}')
+    echo "Launching browser for minting..."
     
-    if [ -z "$MINT_TIME" ]; then
-        echo "Could not retrieve mint time. Please check the URL."
-        return
-    fi
-    
-    echo "Mint starts at: $MINT_TIME"
-    
-    # Convert mint time to seconds
-    CURRENT_TIME=$(date +%H:%M:%S)
-    MINT_SECONDS=$(date -d "$MINT_TIME" +%s)
-    CURRENT_SECONDS=$(date -d "$CURRENT_TIME" +%s)
-    
-    TIME_DIFF=$((MINT_SECONDS - CURRENT_SECONDS))
-    
-    if [ "$TIME_DIFF" -gt 0 ]; then
-        echo "Mint starts in $TIME_DIFF seconds. Waiting..."
-        sleep $TIME_DIFF
-    fi
-    
-    echo "Starting automatic minting process..."
-    chromium-browser --headless --disable-gpu --dump-dom "$MINT_URL" > page.html
-    MINT_BUTTON=$(grep -oP '(?<=<button class="mint-button" ).*?(?=>)' page.html)
-    
-    if [ -z "$MINT_BUTTON" ]; then
-        echo "Mint button not found! Please check the URL or wait for mint to start."
-    else
-        echo "Mint button detected! Executing mint command..."
-        curl -X POST "$MINT_URL" -H "Content-Type: application/json" --data '{"private_key":"'$PRIVATE_KEY'", "action":"mint"}'
-        echo "Minting process completed!"
-    fi
+    python3 - <<EOF
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+import time
+
+options = webdriver.ChromeOptions()
+options.add_argument("--headless")  # Run without opening browser
+options.add_argument("--disable-gpu")
+driver = webdriver.Chrome(options=options)
+
+driver.get("$MINT_URL")
+time.sleep(2)  # Allow page to load
+
+try:
+    mint_button = driver.find_element(By.XPATH, "//button[contains(text(), 'Mint')]")
+    mint_button.click()
+    print("Mint button clicked successfully!")
+except Exception as e:
+    print("Error clicking mint button:", e)
+
+time.sleep(2)
+driver.quit()
+EOF
+
+    echo "Fast minting executed via CryptoBureau!"
     
     # Call the uni_menu function to display the menu
     master
 }
+
+
 
 
 
