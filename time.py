@@ -8,6 +8,8 @@ import time
 MINT_URL_FILE = "magic/data_url"
 
 def get_mint_time():
+    driver = None  # Initialize driver variable
+
     try:
         # Load the URL from the file
         with open(MINT_URL_FILE, "r") as file:
@@ -40,6 +42,7 @@ def get_mint_time():
         print(f"❌ Error: {e}")
 
     finally:
-        driver.quit()
+        if driver:  # Only quit if driver was initialized successfully
+            driver.quit()
 
 get_mint_time()
