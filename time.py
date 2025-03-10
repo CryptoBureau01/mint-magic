@@ -7,6 +7,7 @@ import time
 MINT_URL_FILE = "magic/data_url"
 
 def get_mint_time():
+    driver = None  # Initialize driver variable to avoid UnboundLocalError
     try:
         with open(MINT_URL_FILE, "r") as file:
             MINT_URL = file.read().strip()
@@ -16,7 +17,7 @@ def get_mint_time():
             return
 
         options = webdriver.ChromeOptions()
-        # options.add_argument("--headless")  # COMMENT THIS LINE FOR DEBUGGING
+        # options.add_argument("--headless")  # Debug ke liye headless mode hata diya
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
 
@@ -24,12 +25,12 @@ def get_mint_time():
 
         print(f"🔄 Fetching mint time from: {MINT_URL}")
         driver.get(MINT_URL)
-        time.sleep(5)  # Wait for JavaScript to load
+        time.sleep(5)  # JavaScript elements load hone ka wait
 
-        # PRINT FULL PAGE SOURCE FOR DEBUGGING
+        # Debugging ke liye full page source print karo
         print("🔎 Page Source:\n", driver.page_source)
 
-        # Check if elements are found
+        # Check if countdown timer elements exist
         timer_elements = driver.find_elements(By.XPATH, "//div[contains(@class, 'tw-size-8')]/span")
         print("🔍 Found elements:", len(timer_elements))
 
@@ -43,6 +44,7 @@ def get_mint_time():
         print(f"❌ Error: {e}")
 
     finally:
-        driver.quit()
+        if driver is not None:
+            driver.quit()
 
 get_mint_time()
