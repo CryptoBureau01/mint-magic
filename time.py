@@ -4,30 +4,37 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 import time
 
-# Mint URL jo check karni hai
-MINT_URL = "https://magiceden.io/mint-terminal/monad-testnet/0xf92197613fbafd582132c8fe13d9b427b1b02b1b"
+# Magic Eden Mint URL file path
+MINT_URL_FILE = "magic/data"
 
 def get_mint_time():
-    # Chrome WebDriver setup (headless mode)
-    options = webdriver.ChromeOptions()
-    options.add_argument("--headless")  # Background mode
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-
     try:
+        # Load the URL from the file
+        with open(MINT_URL_FILE, "r") as file:
+            MINT_URL = file.read().strip()
+
+        if not MINT_URL:
+            print("❌ No mint URL found in magic/data!")
+            return
+
+        # Chrome WebDriver setup (headless mode)
+        options = webdriver.ChromeOptions()
+        options.add_argument("--headless")  # Background mode
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+
         print(f"🔄 Fetching mint time from: {MINT_URL}")
         driver.get(MINT_URL)
         time.sleep(5)  # Wait for JavaScript to load
 
-        # Find the countdown timer (Iska class name check karna padega)
-        countdown = driver.find_element(By.CLASS_NAME, "countdown-timer").text
-
-        if countdown:
+        # Find the countdown timer (check the exact class name in the webpage)
+        try:
+            countdown = driver.find_element(By.CLASS_NAME, "countdown-timer").text
             print(f"✅ Mint starts in: {countdown}")
-        else:
-            print("❌ Could not retrieve mint time. Please check the URL.")
+        except:
+            print("❌ Could not retrieve mint time. Please check the URL or class name.")
 
     except Exception as e:
         print(f"❌ Error: {e}")
