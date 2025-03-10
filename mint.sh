@@ -141,7 +141,7 @@ check_balance() {
 # Function: Set Magic Eden Mint URL
 set_mint_url() {
     read -p "Enter Magic Eden Mint Page URL: " MINT_URL
-    echo "$MINT_URL" > magic/data
+    echo "$MINT_URL" > magic/data_url
     echo "Mint URL set and saved to magic/data_url!"
     
     # Call the uni_menu function to display the menu
