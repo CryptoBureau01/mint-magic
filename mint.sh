@@ -94,7 +94,6 @@ set_private_key() {
 
 
 
-# Function: Check Monad Testnet Balance
 check_balance() {
     echo "Checking balance on Monad Testnet..."
     
@@ -106,37 +105,28 @@ check_balance() {
         return
     fi
     
-    # Convert private key to wallet address (Python script)
-    WALLET_ADDRESS=$(python3 - <<EOF
-from eth_account import Account
-import sys
-
-private_key = sys.argv[1]
-acct = Account.from_key(private_key)
-print(acct.address)
-EOF
-    "$PRIVATE_KEY")
-
+    # Generate wallet address from private key using Python
+    WALLET_ADDRESS=$(python3 -c "from eth_account import Account; import os; private_key = os.environ.get('PRIVATE_KEY'); acct = Account.from_key(private_key); print(acct.address)" 2>/dev/null)
+    
     if [ -z "$WALLET_ADDRESS" ]; then
         echo "Error generating wallet address!"
         return
     fi
-
-    # Get balance
+    
+    # Get balance from Monad Testnet
     BALANCE=$(curl -s -X POST "https://testnet-rpc.monad.xyz" \
     -H "Content-Type: application/json" \
     --data '{"jsonrpc":"2.0","method":"eth_getBalance","params":["'$WALLET_ADDRESS'", "latest"],"id":1}' | jq -r '.result')
-    
+
     if [ "$BALANCE" == "null" ]; then
-        echo "Error fetching balance!"
-        return
+        BALANCE="0x0"
     fi
 
-    BALANCE_IN_ETH=$(echo "scale=6; $(echo "ibase=16; ${BALANCE:2}" | bc) / 10^18" | bc)
-    
+    BALANCE_IN_ETH=$(python3 -c "print(int('$BALANCE', 16) / 10**18)")
+
     echo "Wallet Address: $WALLET_ADDRESS"
-    echo "Your Monad Testnet Balance: $BALANCE_IN_ETH ETH"
-    
+    echo "Your Monad Testnet Balance: $BALANCE_IN_ETH MON"
+
     # Call the uni_menu function to display the menu
     master
 }
