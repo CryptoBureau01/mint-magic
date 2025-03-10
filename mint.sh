@@ -88,6 +88,8 @@ set_private_key() {
     master
 }
 
+
+
 # Function: Check Monad Testnet Balance
 check_balance() {
     echo "Checking balance on Monad Testnet..."
@@ -100,16 +102,33 @@ check_balance() {
         return
     fi
     
-    # Get wallet address from private key
-    WALLET_ADDRESS=$(curl -s -X POST "https://testnet-rpc.monad.xyz" \
-    -H "Content-Type: application/json" \
-    --data '{"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":1}' | jq -r '.result[0]')
-    
+    # Convert private key to wallet address (Python script)
+    WALLET_ADDRESS=$(python3 - <<EOF
+from eth_account import Account
+import sys
+
+private_key = sys.argv[1]
+acct = Account.from_key(private_key)
+print(acct.address)
+EOF
+    "$PRIVATE_KEY")
+
+    if [ -z "$WALLET_ADDRESS" ]; then
+        echo "Error generating wallet address!"
+        return
+    fi
+
+    # Get balance
     BALANCE=$(curl -s -X POST "https://testnet-rpc.monad.xyz" \
     -H "Content-Type: application/json" \
     --data '{"jsonrpc":"2.0","method":"eth_getBalance","params":["'$WALLET_ADDRESS'", "latest"],"id":1}' | jq -r '.result')
     
-    BALANCE_IN_ETH=$(printf "%.4f" $(echo "ibase=16; $(echo ${BALANCE:2} | tr '[:lower:]' '[:upper:]') / 10^18" | bc))
+    if [ "$BALANCE" == "null" ]; then
+        echo "Error fetching balance!"
+        return
+    fi
+
+    BALANCE_IN_ETH=$(echo "scale=6; $(echo "ibase=16; ${BALANCE:2}" | bc) / 10^18" | bc)
     
     echo "Wallet Address: $WALLET_ADDRESS"
     echo "Your Monad Testnet Balance: $BALANCE_IN_ETH ETH"
