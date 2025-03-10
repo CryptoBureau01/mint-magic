@@ -1,13 +1,12 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 import time
 
-MINT_URL_FILE = "magic/data_url"
+MINT_URL_FILE = "/root/magic/data_url"
 
 def get_mint_time():
-    driver = None  # Initialize driver variable to avoid UnboundLocalError
+    driver = None  # Initialize driver to prevent UnboundLocalError
     try:
         with open(MINT_URL_FILE, "r") as file:
             MINT_URL = file.read().strip()
@@ -17,22 +16,21 @@ def get_mint_time():
             return
 
         options = webdriver.ChromeOptions()
-        # options.add_argument("--headless")  # Debug ke liye headless mode hata diya
+        options.add_argument("--headless")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
 
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+        driver = webdriver.Chrome(service=Service("/usr/local/bin/chromedriver"), options=options)
 
         print(f"🔄 Fetching mint time from: {MINT_URL}")
         driver.get(MINT_URL)
-        time.sleep(5)  # JavaScript elements load hone ka wait
+        time.sleep(5)  # Wait for JavaScript elements to load
 
-        # Debugging ke liye full page source print karo
+        # Debugging: Print full page source
         print("🔎 Page Source:\n", driver.page_source)
 
-        # Check if countdown timer elements exist
+        # Extract countdown elements
         timer_elements = driver.find_elements(By.XPATH, "//div[contains(@class, 'tw-size-8')]/span")
-        print("🔍 Found elements:", len(timer_elements))
 
         if timer_elements:
             countdown = " : ".join([el.text for el in timer_elements])
@@ -44,7 +42,7 @@ def get_mint_time():
         print(f"❌ Error: {e}")
 
     finally:
-        if driver is not None:
+        if driver is not None:  # Ensure driver exists before quitting
             driver.quit()
 
 get_mint_time()
