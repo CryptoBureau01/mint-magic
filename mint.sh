@@ -52,15 +52,30 @@ master_fun() {
 # Function to install dependencies
 install_dependency() {
     print_info "<=========== Install Dependency ==============>"
+    echo "Checking Python version..."
+    PYTHON_VERSION=$(python3 --version 2>&1 | awk '{print $2}')
+    REQUIRED_VERSION="3.10"
+    
+    if [[ "$PYTHON_VERSION" != "$REQUIRED_VERSION"* ]]; then
+        echo "Upgrading to Python 3.10..."
+        sudo apt update && sudo apt install -y python3.10 python3.10-venv python3.10-dev
+    else
+        echo "Python 3.10 is already installed."
+    fi
+    
     echo "Installing required dependencies..."
-    sudo apt update && sudo apt install -y curl jq chromium-browser unzip
+    sudo apt update && sudo apt install -y curl jq chromium-browser unzip python3-pip
+    pip3 install --upgrade pip selenium
+    
     wget -q https://chromedriver.storage.googleapis.com/$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE)/chromedriver_linux64.zip
     unzip chromedriver_linux64.zip && sudo mv chromedriver /usr/local/bin/
+    
     echo "Dependencies installed successfully!"
-
+    
     # Call the uni_menu function to display the menu
     master
 }
+
 
 
 # Function: Set Private Key
