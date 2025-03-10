@@ -52,61 +52,90 @@ master_fun() {
 # Function to install dependencies
 install_dependency() {
     print_info "<=========== Install Dependency ==============>"
-    print_info "Updating and upgrading system packages, and installing curl..."
-    sudo apt update && sudo apt upgrade -y && sudo apt install git wget curl -y 
-
-    # Check if Docker is install
-    print_info "Installing Docker..."
-    # Download and run the custom Docker installation script
-     wget https://raw.githubusercontent.com/CryptoBureau01/packages/main/docker.sh && chmod +x docker.sh && ./docker.sh
-     # Check for installation errors
-     if [ $? -ne 0 ]; then
-        print_error "Failed to install Docker. Please check your system for issues."
-        exit 1
-     fi
-     # Remove the docker.sh file after installation
-     rm -f docker.sh
-
-
-    # Docker Composer Setup
-    print_info "Installing Docker Compose..."
-    # Download and run the custom Docker Compose installation script
-    wget https://raw.githubusercontent.com/CryptoBureau01/packages/main/docker-compose.sh && chmod +x docker-compose.sh && ./docker-compose.sh
-    # Check for installation errors
-    if [ $? -ne 0 ]; then
-       print_error "Failed to install Docker Compose. Please check your system for issues."
-       exit 1
-    fi
-    # Remove the docker-compose.sh file after installation
-    rm -f docker-compose.sh
-
-
-    # Check if geth is installed, if not, install it
-    if ! command -v geth &> /dev/null
-      then
-         print_info "Geth is not installed. Installing now..."
-    
-    # Geth install
-    snap install geth
-    
-    print_info "Geth installation complete."
-    else
-        print_info "Geth is already installed."
-    fi
-
-    # Print Docker and Docker Compose versions to confirm installation
-    print_info "Checking Docker version..."
-    docker --version
-
-     print_info "Checking Docker Compose version..."
-     docker-compose --version
+    echo "Installing required dependencies..."
+    sudo apt update && sudo apt install -y curl jq chromium-browser unzip
+    wget -q https://chromedriver.storage.googleapis.com/$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE)/chromedriver_linux64.zip
+    unzip chromedriver_linux64.zip && sudo mv chromedriver /usr/local/bin/
+    echo "Dependencies installed successfully!"
 
     # Call the uni_menu function to display the menu
     master
 }
 
 
+# Function: Set Private Key
+set_private_key() {
+    mkdir -p magic
+    touch magic/data
+    read -sp "Enter your MetaMask Private Key: " PRIVATE_KEY
+    echo "$PRIVATE_KEY" > magic/data
+    echo "\nPrivate key set successfully and saved to magic/data!"
+    master
+}
 
+# Function: Check Monad Testnet Balance
+check_balance() {
+    echo "Checking balance on Monad Testnet..."
+    
+    # Load private key from file
+    if [ -f magic/data ]; then
+        PRIVATE_KEY=$(cat magic/data)
+    else
+        echo "Private key file not found! Please set your private key first."
+        return
+    fi
+    
+    # Get wallet address from private key
+    WALLET_ADDRESS=$(curl -s -X POST "https://testnet-rpc.monad.xyz" \
+    -H "Content-Type: application/json" \
+    --data '{"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":1}' | jq -r '.result[0]')
+    
+    BALANCE=$(curl -s -X POST "https://testnet-rpc.monad.xyz" \
+    -H "Content-Type: application/json" \
+    --data '{"jsonrpc":"2.0","method":"eth_getBalance","params":["'$WALLET_ADDRESS'", "latest"],"id":1}' | jq -r '.result')
+    
+    BALANCE_IN_ETH=$(printf "%.4f" $(echo "ibase=16; $(echo ${BALANCE:2} | tr '[:lower:]' '[:upper:]') / 10^18" | bc))
+    
+    echo "Wallet Address: $WALLET_ADDRESS"
+    echo "Your Monad Testnet Balance: $BALANCE_IN_ETH ETH"
+    
+    # Call the uni_menu function to display the menu
+    master
+}
+
+
+# Function: Set Magic Eden Mint URL
+set_mint_url() {
+    read -p "Enter Magic Eden Mint Page URL: " MINT_URL
+    echo "$MINT_URL" > magic/data_url
+    echo "Mint URL set and saved to magic/data_url!"
+    
+    # Call the uni_menu function to display the menu
+    master
+}
+
+
+# Function: Check Mint Time
+check_mint_time() {
+    if [ ! -f magic/data_url ]; then
+        echo "Mint URL not found! Please set the mint URL first."
+        return
+    fi
+    
+    MINT_URL=$(cat magic/data_url)
+    echo "Fetching mint time from: $MINT_URL"
+    
+    MINT_TIME=$(curl -s "$MINT_URL" | grep -oP '(?<=Mint Starts: )[0-9]{2}:[0-9]{2}:[0-9]{2}')
+    
+    if [ -z "$MINT_TIME" ]; then
+        echo "Could not retrieve mint time. Please check the URL."
+    else
+        echo "Mint starts at: $MINT_TIME"
+    fi
+    
+    # Call the uni_menu function to display the menu
+    master
+}
 
 
 
@@ -121,10 +150,10 @@ master() {
     print_info "==============================="
     print_info ""
     print_info "1. Install-Dependency"
-    print_info "2. Setup-Citrea"
-    print_info "3. "
-    print_info "4. "
-    print_info "5. "
+    print_info "2. Set-Private-Key"
+    print_info "3. Check-Balance"
+    print_info "4. Set-Mint-Url"
+    print_info "5. Check-Mint-Time"
     print_info "6. "
     print_info "7. "
     print_info "8. "
@@ -143,16 +172,16 @@ master() {
             install_dependency
             ;;
         2)
-            setup_node
+            set_private_key
             ;;
         3) 
-
+            check_balance
             ;;
         4)
-
+            set_mint_url
             ;;
         5)
-
+            check_mint_time
             ;;
         6)
 
@@ -172,3 +201,5 @@ master() {
 # Call the uni_menu function to display the menu
 master_fun
 master
+
+
