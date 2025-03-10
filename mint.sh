@@ -101,35 +101,37 @@ check_balance() {
     if [ -f magic/data ]; then
         PRIVATE_KEY=$(cat magic/data)
     else
-        echo "Private key file not found! Please set your private key first."
+        echo "❌ Private key file not found! Please set your private key first."
         return
     fi
     
     # Generate wallet address from private key using Python
-    WALLET_ADDRESS=$(python3 -c "from eth_account import Account; import os; private_key = os.environ.get('PRIVATE_KEY'); acct = Account.from_key(private_key); print(acct.address)" 2>/dev/null)
-    
+    WALLET_ADDRESS=$(python3 -c "from eth_account import Account; acct = Account.from_key('$PRIVATE_KEY'); print(acct.address)" 2>/dev/null)
+
     if [ -z "$WALLET_ADDRESS" ]; then
-        echo "Error generating wallet address!"
+        echo "❌ Error generating wallet address! Check your private key."
         return
     fi
     
+    echo "🔹 Wallet Address: $WALLET_ADDRESS"
+    
     # Get balance from Monad Testnet
-    BALANCE=$(curl -s -X POST "https://testnet-rpc.monad.xyz" \
+    BALANCE_HEX=$(curl -s -X POST "https://testnet-rpc.monad.xyz" \
     -H "Content-Type: application/json" \
     --data '{"jsonrpc":"2.0","method":"eth_getBalance","params":["'$WALLET_ADDRESS'", "latest"],"id":1}' | jq -r '.result')
 
-    if [ "$BALANCE" == "null" ]; then
-        BALANCE="0x0"
+    if [ -z "$BALANCE_HEX" ] || [ "$BALANCE_HEX" == "null" ]; then
+        BALANCE_HEX="0x0"
     fi
 
-    BALANCE_IN_ETH=$(python3 -c "print(int('$BALANCE', 16) / 10**18)")
+    BALANCE_IN_MON=$(python3 -c "print(int('$BALANCE_HEX', 16) / 10**18)")
 
-    echo "Wallet Address: $WALLET_ADDRESS"
-    echo "Your Monad Testnet Balance: $BALANCE_IN_ETH MON"
+    echo "✅ Your Monad Testnet Balance: $BALANCE_IN_MON MON"
 
     # Call the uni_menu function to display the menu
     master
 }
+
 
 
 # Function: Set Magic Eden Mint URL
