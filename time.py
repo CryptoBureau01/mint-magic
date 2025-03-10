@@ -4,13 +4,10 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 import time
 
-# Magic Eden Mint URL file path
 MINT_URL_FILE = "magic/data_url"
 
 def get_mint_time():
-    driver = None  # Initialize driver as None
     try:
-        # Load the URL from the file
         with open(MINT_URL_FILE, "r") as file:
             MINT_URL = file.read().strip()
 
@@ -18,9 +15,8 @@ def get_mint_time():
             print("❌ No mint URL found in magic/data!")
             return
 
-        # Chrome WebDriver setup (headless mode)
         options = webdriver.ChromeOptions()
-        options.add_argument("--headless")  # Background mode
+        # options.add_argument("--headless")  # COMMENT THIS LINE FOR DEBUGGING
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
 
@@ -30,24 +26,23 @@ def get_mint_time():
         driver.get(MINT_URL)
         time.sleep(5)  # Wait for JavaScript to load
 
-        # **Find the timer numbers using XPath**
-        try:
-            timer_elements = driver.find_elements(By.XPATH, "//div[contains(@class, 'tw-size-8')]/span")
+        # PRINT FULL PAGE SOURCE FOR DEBUGGING
+        print("🔎 Page Source:\n", driver.page_source)
 
-            if len(timer_elements) == 4:
-                mint_time = f"{timer_elements[0].text}:{timer_elements[1].text}:{timer_elements[2].text}:{timer_elements[3].text}"
-                print(f"✅ Mint starts in: {mint_time}")
-            else:
-                print("❌ Could not retrieve mint time. Timer format issue.")
+        # Check if elements are found
+        timer_elements = driver.find_elements(By.XPATH, "//div[contains(@class, 'tw-size-8')]/span")
+        print("🔍 Found elements:", len(timer_elements))
 
-        except Exception as e:
-            print(f"❌ Error finding timer: {e}")
+        if timer_elements:
+            countdown = " : ".join([el.text for el in timer_elements])
+            print(f"✅ Mint starts in: {countdown}")
+        else:
+            print("❌ Could not retrieve mint time. Element not found.")
 
     except Exception as e:
         print(f"❌ Error: {e}")
 
     finally:
-        if driver:  # Check if driver was initialized before quitting
-            driver.quit()
+        driver.quit()
 
 get_mint_time()
